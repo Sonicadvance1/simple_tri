@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <epoxy/gl.h>
 #include <waffle-1/waffle.h>
 
 #include "Context.h"
@@ -9,6 +10,10 @@ namespace Context
 	waffle_window* win;
 	waffle_context* ctx;
 
+void MsgCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *msg, const void*) {
+	printf("KHR: %s\n", msg);
+}
+
 	void Create()
 	{
 		int32_t init_attribs[] = {
@@ -17,12 +22,15 @@ namespace Context
 		};
 
 		int32_t config_attribs[] = {
-			WAFFLE_CONTEXT_API, WAFFLE_CONTEXT_OPENGL_ES3,
+			WAFFLE_CONTEXT_API, WAFFLE_CONTEXT_OPENGL,
 			WAFFLE_RED_SIZE, 8,
 			WAFFLE_GREEN_SIZE, 8,
 			WAFFLE_BLUE_SIZE, 8,
 			WAFFLE_ALPHA_SIZE, 8,
 			WAFFLE_DOUBLE_BUFFERED, 1,
+			WAFFLE_CONTEXT_PROFILE, WAFFLE_CONTEXT_CORE_PROFILE,
+			WAFFLE_CONTEXT_MAJOR_VERSION, 3,
+			WAFFLE_CONTEXT_MINOR_VERSION, 3,
 			WAFFLE_NONE,
 		};
 
@@ -33,8 +41,8 @@ namespace Context
 		// Open display
 		dpy = waffle_display_connect(nullptr);
 
-		if (!waffle_display_supports_context_api(dpy, WAFFLE_CONTEXT_OPENGL_ES3))
-			printf("Display doesn't support ES 3!\n");
+		if (!waffle_display_supports_context_api(dpy, WAFFLE_CONTEXT_OPENGL))
+			printf("Display doesn't support GL!\n");
 
 		// Get the config we want
 		waffle_config* cfg = waffle_config_choose(dpy, config_attribs);
@@ -61,6 +69,10 @@ namespace Context
 		waffle_make_current(dpy, win, ctx);
 
 		printf("Test: %p\n", waffle_get_proc_address("glGetString"));
+
+		glDebugMessageCallback(MsgCallback, nullptr);
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	}
 
 	void Shutdown()

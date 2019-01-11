@@ -8,8 +8,7 @@
 void DrawTriangle()
 {
 	const char* fs_test =
-	"#version 300 es\n"
-	"precision highp float;\n\n"
+	"#version 330 core\n"
 
 	"in vec4 col;\n"
 
@@ -19,10 +18,10 @@ void DrawTriangle()
 	"}\n";
 
 	const char* vs_test =
-	"#version 300 es\n"
+	"#version 330 core\n"
 
-	"in vec2 pos;\n"
-	"in vec4 in_col;\n"
+	"layout(location = 0) in vec2 pos;\n"
+	"layout(location = 1) in vec4 in_col;\n"
 	"out vec4 col;\n"
 
 	"void main() {\n"
@@ -42,6 +41,20 @@ void DrawTriangle()
 	glCompileShader(fs);
 	glCompileShader(vs);
 
+	char tmp[2048];
+	GLsizei tmpsize;
+	glGetShaderInfoLog(vs, 2048, &tmpsize, tmp);
+	if (tmpsize) {
+		printf("VS Problem: %s\n", tmp);
+		return;
+	}
+
+	glGetShaderInfoLog(fs, 2048, &tmpsize, tmp);
+	if (tmpsize) {
+		printf("FS Problem: %s\n", tmp);
+		return;
+	}
+
 	glGetShaderiv(fs, GL_COMPILE_STATUS, &stat);
 	if (!stat)
 		printf("Couldn't compile fragment shader!\n");
@@ -58,11 +71,22 @@ void DrawTriangle()
 	if (!stat)
 		printf("Couldn't link program!\n");
 
+
+	glGetProgramInfoLog(pgm, 2038, &tmpsize, tmp);
+	if (tmpsize) {
+		printf("Program problem: %s\n", tmp);
+		return;
+	}
+
 	glUseProgram(pgm);
 
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
 	// Get attribute locations
-	attr_pos = glGetAttribLocation(pgm, "pos");
-	attr_col = glGetAttribLocation(pgm, "in_col");
+	attr_pos = 0;
+	attr_col = 1;
 
 	glEnableVertexAttribArray(attr_pos);
 	glEnableVertexAttribArray(attr_col);
@@ -106,7 +130,6 @@ int main()
 	printf("GL_RENDERER   = %s\n", (char *) glGetString(GL_RENDERER));
 	printf("GL_VERSION    = %s\n", (char *) glGetString(GL_VERSION));
 	printf("GL_VENDOR     = %s\n", (char *) glGetString(GL_VENDOR));
-	printf("GL_EXTENSIONS = %s\n", (char *) glGetString(GL_EXTENSIONS));
 
 	DrawTriangle();
 
